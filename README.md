@@ -3,15 +3,15 @@ Dashboard locale per le buste paga Terna (PDF).
 
 ## Avvio rapido
 
-Dalla cartella `buste-dashboard`, esegui `./buste_paga`. Per poterla richiamare
-con il solo comando `buste_paga`, imposta l'alias esistente affinché punti al
-percorso completo di questo script, ad esempio:
+Dalla cartella del progetto, esegui `./buste_paga`. Per poterla richiamare con
+il solo comando `buste_paga`, imposta l'alias esistente affinché punti al
+percorso completo di questo script nella cartella principale, ad esempio:
 
-    alias buste_paga='/percorso/del/progetto/buste-dashboard/buste_paga'
+    alias buste_paga='/percorso/del/progetto/buste_paga'
 
-Lo script avvia questa dashboard e usa la cartella principale del progetto come
-cartella dei PDF; `BUSTE_DIR` può sovrascrivere il percorso. Il server resta
-accessibile solo all'indirizzo locale configurato dall'applicazione.
+Lo script avvia questa dashboard e usa la cartella del progetto come cartella
+dei PDF; `BUSTE_DIR` può sovrascrivere il percorso. Il server resta accessibile
+solo all'indirizzo locale configurato dall'applicazione.
 
     pip3 install -r requirements.txt
     python3 server.py            # poi apri http://127.0.0.1:8765
