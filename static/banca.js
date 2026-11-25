@@ -1,0 +1,70 @@
+// Modulo home banking (attivo solo se abilitato nelle impostazioni)
+const BANK_TABS=[["ban","Banca"],["bud","Budget"],["mov","Movimenti"]];
+let SET={bank_enabled:false},B=null,bm=null,mf={m:"",s:"",q:""};
+const esc=s=>String(s??"").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+document.head.insertAdjacentHTML("beforeend",`<style>.btnlike{display:inline-block;cursor:pointer;padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(20,32,60,.7)}.btnlike:hover{border-color:var(--c)}
+.bar{height:8px;border-radius:9px;background:rgba(80,140,255,.15);overflow:hidden;min-width:120px}.bar i{display:block;height:100%;border-radius:9px}td input,td select{padding:4px 8px;width:110px}.warn{color:var(--a)}</style>`);
+const ym=d=>d.slice(0,7),sm=(a,f)=>a.reduce((s,x)=>s+(f(x)||0),0),avg=a=>a.length?sm(a,x=>x)/a.length:0,mlab=k=>MESI[+k.slice(5)-1]+" "+k.slice(2,4);
+const SEC=()=>Object.fromEntries(SET.defaults.sectors.map(s=>[s.id,s]));
+const secId=(c,i)=>({...SET.defaults.map,...(SET.bank_map||{})}[c]||(i<0?"altro":"entrate"));
+const post=async o=>{await fetch("/api/settings",{method:"POST",body:JSON.stringify(o)});sig="";load()};
+const norm=o=>o.toLowerCase().replace(/[0-9*#]+/g,"").replace(/\s+/g," ").trim().slice(0,26);
+function agg(){const S=SEC(),M={};(B.movimenti||[]).forEach(t=>{const id=secId(t.c,t.i),k=S[id]?.kind||"spesa",m=M[ym(t.d)]=M[ym(t.d)]||{k:ym(t.d),ent:0,stip:0,spese:0,rs:0,ds:0,sec:{},tx:[],first:t.d,last:t.d};
+ t.s=id;t.k=k;m.tx.push(t);if(t.d<m.first)m.first=t.d;if(t.d>m.last)m.last=t.d;
+ if(k==="spesa"){m.spese-=t.i;m.sec[id]=(m.sec[id]||0)-t.i}else if(k==="risparmio")m.rs-=t.i;else if(k==="disinv")m.ds+=t.i;else{m.ent+=t.i;if(id==="stipendio")m.stip+=t.i}});return M}
+function baseIncome(M){const b=SET.budget||{};if(b.income_mode==="euro"&&b.income>0)return +b.income;const st=Object.values(M).map(m=>m.stip).filter(x=>x>0);if(st.length)return avg(st);const p=P();return p.length?avg(p.map(x=>x.campi.netto)):0}
+const tgt=(c,I)=>!c||!(c.value>0)?0:c.mode==="euro"?+c.value:I*c.value/100;
+const upCard=()=>card("File home banking",`<div class="note" style="margin-top:0">${B.files.length} file · ${B.movimenti.length} movimenti. Una volta al mese scarica l'elenco operazioni dalla banca e caricalo qui (o copialo in <span class="mono">${esc(B.dir)}</span>). I movimenti già presenti non vengono duplicati.</div>
+ <label class="btnlike"><input type="file" id="up" accept=".xls,.xlsx" multiple hidden>⬆ Carica file</label>${B.errors.map(e=>`<p class="note ko">${esc(e.file)}: ${esc(e.errore)}</p>`).join("")}`,"var(--v)");
+const monthSel=(ks,id)=>`<select id="${id}">${ks.map(k=>`<option value="${k}" ${k===bm?"selected":""}>${mlab(k)}</option>`).join("")}</select>`;
+const noData=()=>`<div class="grid g2">${upCard()}</div><div class="empty"><h2>Nessun movimento</h2><p>Carica un file Excel dell'home banking per vedere le analisi.</p></div>`;
+function bankViews(){const o={};
+ o.ban=()=>{if(!B||!B.enabled)return"";const M=agg(),ks=Object.keys(M).sort();if(!ks.length)return noData();if(!bm||!M[bm])bm=ks[ks.length-1];
+  const m=M[bm],S=SEC(),I=baseIncome(M),bd=SET.budget||{},days=new Date(+bm.slice(0,4),+bm.slice(5),0).getDate(),ld=+m.last.slice(8),fd=+m.first.slice(8),risp=m.ent-m.spese,
+  top=Object.entries(m.sec).sort((a,b)=>b[1]-a[1])[0],part=(ks[0]===bm&&fd>5?`dati dal ${fd}`:"")+(ks.at(-1)===bm&&ld<days-2?` dati fino al ${ld}`:""),ps=P().find(x=>x.periodo===bm);
+  const g={};B.movimenti.forEach(t=>{if(t.k!=="spesa"||t.i>=0)return;const k=norm(t.o);(g[k]=g[k]||[]).push(t)});
+  const rec=Object.values(g).map(a=>{const v=a.map(t=>-t.i),mu=avg(v),n=new Set(a.map(t=>ym(t.d))).size;return{name:a[0].o,n,mu,ok:Math.max(...v)-Math.min(...v)<=mu*.1&&a.length===n}}).filter(r=>r.n>=2&&r.ok).sort((a,b)=>b.mu-a.mu).slice(0,10);
+  return `<div class="grid k">${kpi("Mese",`<span style="font-size:20px">${monthSel(ks,"bmsel")}</span>`,part?`<span class="warn">parziale · ${part}</span>`:"dati completi","var(--v)")}
+  ${kpi("Entrate",eur(m.ent),"di cui stipendio "+eur(m.stip),"var(--c)")}${kpi("Spese",eur(m.spese),"escluso salvadanaio · "+eur(m.spese/Math.max(1,ld-(ks[0]===bm?fd:1)+1))+"/giorno","var(--r)")}
+  ${kpi("Entrate − spese",eur(risp),m.stip===0?`<span class="warn">stipendio non ancora accreditato</span>`:isFinite(risp/m.ent)?pc(risp/m.ent*100)+" delle entrate":"",risp<0?"var(--r)":"var(--g)")}${kpi("Salvadanaio netto",eur(m.rs-m.ds),"versato "+eur(m.rs)+" · prelevato "+eur(m.ds),"#c084fc")}${kpi("Settore principale",top?S[top[0]].label:"—",top?eur(top[1])+" · "+pc(top[1]/m.spese*100):"","var(--a)")}</div>
+  <div class="grid g2" style="margin-top:16px">${cv("b1","Entrate · Spese · Entrate − spese per mese",1)}${cv("b2","Spese per settore · "+mlab(bm),1)}${cv("b3","Spese per settore nei mesi",1)}${cv("b4","Spesa cumulata del mese vs budget",1)}${cv("b5","Principali esercenti · "+mlab(bm),1)}${cv("b6","Spese per giorno della settimana (tutto il periodo)",1)}</div>
+  ${ps?`<div class="grid" style="margin-top:16px">${card("Dal lordo al risparmio · "+mlab(bm),`<div class="cv" style="height:150px"><canvas id="b7"></canvas></div><div class="note">Lordo ${eur(ps.campi.tot_competenze)} → trattenute ${eur(ps.campi.tot_trattenute)} → netto ${eur(ps.campi.netto)} → spese ${eur(m.spese)}.</div>`,"var(--m)")}</div>`:""}
+  <div class="grid g2" style="margin-top:16px"><div class="card"><h3>Abbonamenti e spese ricorrenti</h3>${rec.length?`<table><tr><th class="l">Esercente</th><th>Mesi</th><th>Importo</th></tr>${rec.map(r=>trow([esc(r.name),r.n,n2(r.mu)])).join("")}<tr class="tot"><td class="l">Totale mensile</td><td></td><td class="num">${n2(sm(rec,r=>r.mu))}</td></tr></table>`:'<div class="note">Servono almeno 2 mesi di dati.</div>'}</div>${upCard()}</div>
+  <p class="note">Le spese escludono salvadanaio e investimenti (contati come risparmio). Entrate = stipendio e altri accrediti, senza prelievi dal salvadanaio. Base di reddito per il budget: ${eur(I)}.</p>`};
+ o.ban.after=()=>{if(!B?.enabled)return;const M=agg(),ks=Object.keys(M).sort(),m=M[bm],S=SEC(),I=baseIncome(M),bd=SET.budget||{};const L=ks.map(mlab);
+  mk("b1","bar",L,[ds("Entrate",ks.map(k=>M[k].ent),"#22e4ff"),ds("Spese",ks.map(k=>M[k].spese),"#ff4d6d"),ds("Entrate − spese",ks.map(k=>M[k].ent-M[k].spese),"#a3ff12",{type:"line",fill:true,backgroundColor:"#a3ff1233"})]);
+  const se=Object.entries(m.sec).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
+  mk("b2","doughnut",se.map(x=>S[x[0]].label),[{data:se.map(x=>x[1]),backgroundColor:se.map(x=>S[x[0]].color+"cc"),borderColor:"#04060d",borderWidth:3}],{opt:{cutout:"60%",plugins:{tooltip:{callbacks:{label:c=>` ${c.label}: ${eur(c.parsed)}`}}}}});
+  mk("b3","bar",L,SET.defaults.sectors.filter(s=>s.kind==="spesa"&&ks.some(k=>M[k].sec[s.id]>0)).map(s=>ds(s.label,ks.map(k=>M[k].sec[s.id]||0),s.color)),{stack:1});
+  const days=new Date(+bm.slice(0,4),+bm.slice(5),0).getDate(),ld=+m.last.slice(8),cum=[];let acc=0;for(let d=1;d<=ld;d++){acc+=sm(m.tx.filter(t=>t.k==="spesa"&&+t.d.slice(8)===d),t=>-t.i);cum.push(acc)}
+  const sb=sm(SET.defaults.sectors.filter(s=>s.kind==="spesa"),s=>tgt(bd.sectors?.[s.id],I)),lab=Array.from({length:days},(_,i)=>i+1),sets=[ds("Spesa cumulata",cum,"#ff4d6d",{fill:true,backgroundColor:"#ff4d6d22"})];
+  if(sb>0)sets.push(ds("Budget (lineare)",lab.map(d=>sb*d/days),"#ffb020",{borderDash:[6,5],pointRadius:0,backgroundColor:"transparent"}));mk("b4","line",lab,sets);
+  const mg={};m.tx.filter(t=>t.k==="spesa"&&t.i<0).forEach(t=>{const k=norm(t.o)||t.o;mg[k]=(mg[k]||0)-t.i});const tm=Object.entries(mg).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  mk("b5","bar",tm.map(x=>x[0]),[ds("Spesa",tm.map(x=>x[1]),"#22e4ff")],{opt:{indexAxis:"y",scales:{x:{ticks:{callback:v=>v+" €"}},y:{}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${eur(c.parsed.x)}`}}}}});
+  const wd=[0,0,0,0,0,0,0];B.movimenti.forEach(t=>{if(t.k==="spesa")wd[(new Date(t.d).getDay()+6)%7]-=t.i});mk("b6","bar",["Lun","Mar","Mer","Gio","Ven","Sab","Dom"],[ds("Spese",wd,"#ff2bd6")]);
+  const ps=P().find(x=>x.periodo===bm);if(ps){const net=ps.campi.netto,segs=[["Trattenute",ps.campi.tot_trattenute,"#ff4d6d"],...Object.entries(m.sec).sort((a,b)=>b[1]-a[1]).map(([id,v])=>[S[id].label,v,S[id].color]),["Risparmio/residuo",Math.max(0,net-m.spese),"#a3ff12"]];
+   mk("b7","bar",["Lordo"],segs.map(s=>ds(s[0],[s[1]],s[2])),{stack:1,opt:{indexAxis:"y",plugins:{tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.x)}`}}},scales:{x:{stacked:true,max:ps.campi.tot_competenze},y:{stacked:true}}}})}
+  $("#bmsel").onchange=e=>{bm=e.target.value;render()};$("#up")?.addEventListener("change",async e=>{for(const f of e.target.files)await fetch("/api/bank/upload",{method:"POST",headers:{"X-Filename":encodeURIComponent(f.name)},body:f});sig="";load()})};
+ o.bud=()=>{if(!B||!B.enabled)return"";const M=agg(),ks=Object.keys(M).sort();if(!ks.length)return noData();if(!bm||!M[bm])bm=ks[ks.length-1];const m=M[bm],S=SEC(),b=SET.budget||{},I=baseIncome(M),sp=SET.defaults.sectors.filter(s=>s.kind==="spesa");
+  const mode=(v)=>`<select><option value="percent" ${v!=="euro"?"selected":""}>% reddito</option><option value="euro" ${v==="euro"?"selected":""}>€ / mese</option></select>`;
+  const st=(a,t)=>{if(!t)return'<span class="note">—</span>';const r=a/t;return `<div class="bar"><i style="width:${Math.min(100,r*100)}%;background:${r>1?"var(--r)":r>.85?"var(--a)":"var(--g)"}"></i></div>`};
+  const rows=sp.map(s=>{const c=b.sectors?.[s.id]||{},t=tgt(c,I),a=m.sec[s.id]||0;return `<tr data-sec="${s.id}"><td class="l"><span style="color:${s.color}">●</span> ${s.label}</td><td>${mode(c.mode)}</td><td><input type="number" step="any" min="0" value="${c.value||""}"></td><td class="num">${t?n2(t):"—"}</td><td class="num">${n2(a)}</td><td>${st(a,t)}</td><td class="num ${t&&a>t?"dn":"up"}">${t?(a>t?"+":"−")+n2(Math.abs(a-t)):""}</td></tr>`}).join("");
+  const sv=b.savings||{},stg=tgt(sv,I),risp=m.ent-m.spese,allT=sm(sp,s=>tgt(b.sectors?.[s.id],I));
+  const cats=[...new Set(B.movimenti.map(t=>t.c))].sort(),opts=id=>SET.defaults.sectors.map(s=>`<option value="${s.id}" ${s.id===id?"selected":""}>${s.label}</option>`).join("");
+  return `<div class="card"><h3>Budget mensile · confronto con ${monthSel(ks,"bmsel")}</h3>
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">Reddito di riferimento: <select id="im"><option value="auto" ${b.income_mode!=="euro"?"selected":""}>automatico (${eur(I)})</option><option value="euro" ${b.income_mode==="euro"?"selected":""}>manuale</option></select> <input id="iv" type="number" step="any" min="0" value="${b.income||""}" placeholder="€ / mese" style="width:120px"></div>
+  <div class="sc"><table><tr><th class="l">Settore</th><th>Tipo</th><th>Valore</th><th>Budget €</th><th>Speso</th><th>Uso</th><th>Scarto</th></tr>${rows}
+  <tr class="tot" id="sv"><td class="l">★ Da mettere da parte</td><td>${mode(sv.mode)}</td><td><input type="number" step="any" min="0" value="${sv.value||""}"></td><td class="num">${stg?n2(stg):"—"}</td><td class="num">${n2(risp)}</td><td>${st(Math.max(0,risp),stg)}</td><td class="num ${stg&&risp<stg?"dn":"up"}">${stg?(risp<stg?"−":"+")+n2(Math.abs(risp-stg)):""}</td></tr></table></div>
+  <p class="note ${allT+stg>I&&I?"ko":""}">Totale assegnato (spese + risparmio): ${eur(allT+stg)} su ${eur(I)} (${pc(I?(allT+stg)/I*100:NaN)}). Imposta un settore a 0 per non avere un limite.</p><button id="bsave">Salva budget</button></div>
+  <div class="card" style="margin-top:16px"><h3>Mappa categorie banca → settore</h3><div class="sc"><table><tr><th class="l">Categoria della banca</th><th class="l">Settore</th></tr>${cats.map(c=>`<tr data-cat="${esc(c)}"><td class="l">${esc(c||"(vuota)")}</td><td class="l"><select style="width:240px">${opts(secId(c,-1))}</select></td></tr>`).join("")}</table></div></div>`};
+ o.bud.after=()=>{if(!B?.enabled)return;$("#bmsel")&&($("#bmsel").onchange=e=>{bm=e.target.value;render()});
+  $("#bsave")&&($("#bsave").onclick=()=>{const b={income_mode:$("#im").value,income:+$("#iv").value||0,savings:{mode:$("#sv select").value,value:+$("#sv input").value||0},sectors:{}};
+   document.querySelectorAll("[data-sec]").forEach(r=>b.sectors[r.dataset.sec]={mode:r.querySelector("select").value,value:+r.querySelector("input").value||0});post({budget:b})});
+  document.querySelectorAll("[data-cat]").forEach(r=>r.querySelector("select").onchange=e=>post({bank_map:{...(SET.bank_map||{}),[r.dataset.cat]:e.target.value}}))};
+ o.mov=()=>{if(!B||!B.enabled)return"";const M=agg(),ks=Object.keys(M).sort().reverse(),S=SEC();if(!ks.length)return noData();
+  const q=mf.q.toLowerCase(),rows=B.movimenti.filter(t=>(!mf.m||ym(t.d)===mf.m)&&(!mf.s||t.s===mf.s)&&(!q||t.o.toLowerCase().includes(q))),tot=sm(rows,t=>t.i);
+  return `<div class="card"><h3>Movimenti <select id="fm"><option value="">Tutti i mesi</option>${ks.map(k=>`<option value="${k}" ${k===mf.m?"selected":""}>${mlab(k)}</option>`).join("")}</select> <select id="fs2"><option value="">Tutti i settori</option>${SET.defaults.sectors.map(s=>`<option value="${s.id}" ${s.id===mf.s?"selected":""}>${s.label}</option>`).join("")}</select> <input id="fq" placeholder="cerca…" value="${esc(mf.q)}"></h3>
+  <div class="note">${rows.length} movimenti · saldo ${eur(tot)}${rows.length>400?" · mostrati i primi 400":""}</div><div class="sc"><table class="d"><tr><th class="l">Data</th><th class="l">Operazione</th><th class="l">Settore</th><th>Importo</th></tr>
+  ${rows.slice(0,400).map(t=>`<tr><td class="l">${t.d.split("-").reverse().join("/")}</td><td class="l">${esc(t.o)}</td><td class="l"><span style="color:${S[t.s]?.color}">●</span> ${S[t.s]?.label||t.s}</td><td class="num ${t.i<0?"dn":"up"}">${n2(t.i)}</td></tr>`).join("")}</table></div></div>`};
+ o.mov.after=()=>{if(!B?.enabled)return;$("#fm").onchange=e=>{mf.m=e.target.value;render()};$("#fs2").onchange=e=>{mf.s=e.target.value;render()};$("#fq").onchange=e=>{mf.q=e.target.value;render()}};
+ return o}

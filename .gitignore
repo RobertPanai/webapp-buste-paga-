@@ -1,8 +1,9 @@
-# Dati personali e cache esclusi dalla repository
+# dati personali: mai nella repo
 *.pdf
 config.json
 cache.json
 *.tmp
+# ambiente locale
 .venv/
 __pycache__/
 .DS_Store

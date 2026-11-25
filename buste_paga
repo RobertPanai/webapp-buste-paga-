@@ -1,0 +1,10 @@
+#!/bin/sh
+# Avvia la dashboard PAYSLIP//CORE usando la cartella del progetto per i PDF.
+set -eu
+
+APP_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+PROJECT_DIR=$(dirname -- "$APP_DIR")
+
+export BUSTE_DIR="${BUSTE_DIR:-$PROJECT_DIR}"
+cd "$APP_DIR"
+exec python3 server.py
