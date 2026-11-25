@@ -1,0 +1,12 @@
+# Dati personali e cache esclusi dalla repository
+*.pdf
+config.json
+cache.json
+*.tmp
+.venv/
+__pycache__/
+.DS_Store
+*.xls
+*.xlsx
+cache_bank.json
+home_banking/
