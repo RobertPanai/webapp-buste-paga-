@@ -26,3 +26,13 @@ Attivalo da ⚙ Cartella → «Analizza anche l'home banking». Senza attivarlo 
 - Estratti conto `.xls`/`.xlsx` (elenco operazioni della banca) nella cartella `home_banking` dentro la cartella buste paga, oppure con «Carica file» nella scheda Banca. I movimenti già presenti non si duplicano.
 - Schede: **Banca** (entrate/spese, settori, ricorrenti, collegamento col netto in busta), **Budget** (limite per settore in % del reddito o in €, quota da risparmiare, mappa categorie banca → settore), **Movimenti**.
 - I file Excel e `cache_bank.json` sono nel `.gitignore`: non vanno mai in repo.
+
+## Altri redditi e stima 730
+La scheda **Altri redditi** registra i compensi fuori busta paga (es. prestazioni occasionali): importo netto, se è già incassato o da incassare, se la ritenuta d'acconto del 20% è già stata applicata.
+- I dati restano solo in locale in `extra.json` (ignorato da git).
+- Le ritenute versate entrano tra le tasse pagate nell'anno (scheda Tasse & INPS).
+- Stima del saldo al 730: IRPEF con scaglioni 2026 (23% / 33% / 43%) meno detrazione da lavoro dipendente, calcolata sulla differenza tra reddito da lavoro (stimato dalle buste paga o inserito a mano) con e senza il compenso, più addizionali, meno ritenute. È una stima indicativa: non considera altre detrazioni, bonus e contributo INPS Gestione separata.
+- Metodo ritenuta: «20% del netto inserito» (default) oppure «20% del lordo» (netto ÷ 0,80, come da normativa).
+
+## Temi grafici
+Dal selettore in alto a destra si sceglie tra **Tema sobrio** (chiaro/scuro automatico, predefinito) e **Tema futuristico** (neon su sfondo scuro). La scelta resta salvata nel browser.

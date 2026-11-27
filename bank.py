@@ -6,11 +6,11 @@ BANK_VERSION = 1
 # Movimenti e descrizioni restano solo in memoria e vengono ricreati dopo il riavvio.
 _MEMORY = {}
 SECTORS = [  # id, etichetta, tipo, colore
- ("casa", "Casa & utenze", "spesa", "#7aa8ff"), ("cibo", "Alimentari", "spesa", "#a3ff12"), ("ristoranti", "Ristoranti e bar", "spesa", "#ffb020"),
- ("trasporti", "Auto & trasporti", "spesa", "#22e4ff"), ("salute", "Salute & persona", "spesa", "#34d399"), ("svago", "Svago, sport & viaggi", "spesa", "#ff2bd6"),
+ ("casa", "Casa & utenze", "spesa", "#5b8def"), ("cibo", "Alimentari", "spesa", "#3aa56f"), ("ristoranti", "Ristoranti e bar", "spesa", "#d08a1c"),
+ ("trasporti", "Auto & trasporti", "spesa", "#2563eb"), ("salute", "Salute & persona", "spesa", "#52b287"), ("svago", "Svago, sport & viaggi", "spesa", "#a14d8f"),
  ("contanti", "Prelievi e bonifici", "spesa", "#94a3b8"), ("altro", "Altro", "spesa", "#64748b"),
- ("risparmio", "Salvadanaio / investimenti", "risparmio", "#8b5cf6"), ("disinv", "Prelievi dal salvadanaio", "disinv", "#c084fc"),
- ("stipendio", "Stipendio", "entrata", "#2dd4bf"), ("entrate", "Altre entrate", "entrata", "#60a5fa")]
+ ("risparmio", "Salvadanaio / investimenti", "risparmio", "#6b63d6"), ("disinv", "Prelievi dal salvadanaio", "disinv", "#8a74c9"),
+ ("stipendio", "Stipendio", "entrata", "#2a9d9a"), ("entrate", "Altre entrate", "entrata", "#5f93d9")]
 MAP = {"Pagamento affitti": "casa", "Casa varie": "casa", "Rate Mutuo e Finanziamento": "casa", "TV, Internet, telefono": "casa", "Cellulare": "casa",
  "Generi alimentari e supermercato": "cibo", "Ristoranti e bar": "ristoranti", "Carburanti": "trasporti", "Manutenzione veicoli": "trasporti",
  "Trasporti, noleggi, taxi e parcheggi": "trasporti", "Treno, aereo, nave": "trasporti", "Spese mediche": "salute", "Cura della persona": "salute",
@@ -71,6 +71,14 @@ def scan_bank(folder, cache_path, force=False):
                 p = os.path.join(root, n); st = os.stat(p); sig = [st.st_size, st.st_mtime_ns]; seen.add(p)
                 if p in files and files[p]["sig"] == sig: continue
                 try: files[p] = {"sig": sig, "mov": parse_bank(p)}
+                except ModuleNotFoundError as exc:
+                    package = "xlrd" if exc.name == "xlrd" else "openpyxl" if exc.name == "openpyxl" else None
+                    message = f"Libreria {package} mancante. Installa le dipendenze con pip install -r requirements.txt." if package else "Dipendenza necessaria mancante. Installa le dipendenze con pip install -r requirements.txt."
+                    files[p] = {"sig": sig, "error": message}
+                except ModuleNotFoundError as exc:
+                    package = "xlrd" if exc.name == "xlrd" else "openpyxl" if exc.name == "openpyxl" else None
+                    message = f"Libreria {package} mancante. Installa le dipendenze con pip install -r requirements.txt." if package else "Dipendenza necessaria mancante. Installa le dipendenze con pip install -r requirements.txt."
+                    files[p] = {"sig": sig, "error": message}
                 except Exception: files[p] = {"sig": sig, "error": "file non leggibile o formato non riconosciuto"}
                 changed = True
     for p in list(files):

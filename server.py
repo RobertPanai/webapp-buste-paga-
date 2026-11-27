@@ -7,7 +7,7 @@ from parser import parse_pdf, PARSER_VERSION
 import bank
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-CONFIG = os.path.join(BASE, "config.json"); CACHE = os.path.join(BASE, "cache.json"); BCACHE = os.path.join(BASE, "cache_bank.json")
+CONFIG = os.path.join(BASE, "config.json"); CACHE = os.path.join(BASE, "cache.json"); BCACHE = os.path.join(BASE, "cache_bank.json"); EXTRA = os.path.join(BASE, "extra.json")
 DEFAULT_DIR = os.environ.get("BUSTE_DIR", os.path.dirname(BASE))
 LOCK = threading.Lock()
 CONFIG_LOCK = threading.Lock()
@@ -58,7 +58,20 @@ def bank_dir(): return os.path.expanduser(cfg().get("bank_dir") or os.path.join(
 def settings():
     c = cfg()
     return {"directory": get_dir(), "default": DEFAULT_DIR, "bank_enabled": bool(c.get("bank_enabled")), "bank_dir": bank_dir(),
-            "budget": c.get("budget", {}), "bank_map": c.get("bank_map", {}), "defaults": bank.defaults()}
+            "budget": c.get("budget", {}), "bank_map": c.get("bank_map", {}), "extra_cfg": c.get("extra_cfg", {}), "defaults": bank.defaults()}
+def clean_extra(items):
+    """Valida e normalizza gli altri redditi (restano solo in locale, extra.json)."""
+    out = []
+    for i in items[:2000] if isinstance(items, list) else []:
+        if not isinstance(i, dict): continue
+        try: imp = round(float(i.get("importo", 0)), 2)
+        except (TypeError, ValueError): continue
+        d = str(i.get("data", ""))[:10]
+        if not (len(d) == 10 and d[4] == "-" and d[7] == "-" and imp >= 0): continue
+        out.append({"id": str(i.get("id", ""))[:32] or str(len(out)), "data": d, "descrizione": str(i.get("descrizione", ""))[:80],
+                    "importo": imp, "incassato": bool(i.get("incassato")), "ritenuta": bool(i.get("ritenuta"))})
+    return out
+def extra_data(): return {"items": clean_extra(load(EXTRA, {}).get("items", []))}
 def bank_data(force=False):
     if not cfg().get("bank_enabled"): return {"enabled": False}
     with LOCK: return bank.scan_bank(bank_dir(), BCACHE, force)
@@ -69,14 +82,23 @@ class H(SimpleHTTPRequestHandler):
     def send_json(self, obj, code=200):
         b = json.dumps(obj, ensure_ascii=False).encode(); self.send_response(code)
         self.send_header("Content-Type", "application/json; charset=utf-8"); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
+    def allowed(self):
+        """Difesa da richieste di altri siti (CSRF / DNS rebinding): Host e Origin devono essere locali."""
+        port = self.server.server_address[1]; ok = {f"127.0.0.1:{port}", f"localhost:{port}"}
+        if self.headers.get("Host", "") not in ok: return False
+        o = self.headers.get("Origin")
+        return o is None or o in {f"http://{h}" for h in ok}
     def do_GET(self):
+        if not self.allowed(): return self.send_json({"error": "origine non consentita"}, 403)
         path = urlparse(self.path).path
         if path == "/api/data": return self.send_json(scan())
         if path == "/api/config": return self.send_json({"directory": get_dir(), "default": DEFAULT_DIR})
         if path == "/api/settings": return self.send_json(settings())
         if path == "/api/bank": return self.send_json(bank_data())
+        if path == "/api/extra": return self.send_json(extra_data())
         return super().do_GET()
     def do_POST(self):
+        if not self.allowed(): return self.send_json({"error": "origine non consentita"}, 403)
         path = urlparse(self.path).path
         if path == "/api/bank/upload":   # carica un estratto conto nella cartella home banking
             if not cfg().get("bank_enabled"): return self.send_json({"error": "home banking disattivato"}, 403)
@@ -88,17 +110,27 @@ class H(SimpleHTTPRequestHandler):
             if len(raw) != size: return self.send_json({"error": "upload incompleto"}, 400)
             name = os.path.basename(unquote(self.headers.get("X-Filename", "estratto.xlsx"))) or "estratto.xlsx"
             if not name.lower().endswith((".xls", ".xlsx")): return self.send_json({"error": "formato non supportato"}, 400)
-            d = bank_dir(); os.makedirs(d, exist_ok=True); dest = os.path.join(d, name)
+            d = bank_dir(); os.makedirs(d, exist_ok=True)
+            today = time.strftime("%Y-%m-%d")
+            stem, ext = os.path.splitext(name)
+            ext = ext.lower()
+            dest = os.path.join(d, f"{today}_{stem}{ext}")
             # O_EXCL impedisce collisioni anche fra richieste simultanee.
-            stem, ext = os.path.splitext(name); index = 1
+            index = 1
             while True:
                 try:
                     with open(dest, "xb") as f: f.write(raw)
                     break
                 except FileExistsError:
-                    dest = os.path.join(d, f"{stem}_{index}{ext}"); index += 1
-            return self.send_json(bank_data(force=True))
-        if path not in ("/api/config", "/api/settings", "/api/rescan"):
+                    dest = os.path.join(d, f"{today}_{stem}_{index}{ext}"); index += 1
+            result = bank_data(force=True)
+            uploaded = os.path.basename(dest)
+            file_error = next((item for item in result.get("errors", []) if item.get("file") == uploaded), None)
+            if file_error:
+                return self.send_json({"error": f"{uploaded}: {file_error['errore']}", "saved": uploaded}, 422)
+            result["uploaded"] = uploaded
+            return self.send_json(result)
+        if path not in ("/api/config", "/api/settings", "/api/rescan", "/api/extra"):
             return self.send_json({"error": "not found"}, 404)
         try: size = int(self.headers.get("Content-Length", "0") or 0)
         except ValueError: return self.send_json({"error": "dimensione non valida"}, 400)
@@ -107,6 +139,9 @@ class H(SimpleHTTPRequestHandler):
         try: body = json.loads(raw or b"{}")
         except (json.JSONDecodeError, UnicodeDecodeError): return self.send_json({"error": "JSON non valido"}, 400)
         if not isinstance(body, dict): return self.send_json({"error": "JSON non valido"}, 400)
+        if path == "/api/extra":
+            with CONFIG_LOCK: save(EXTRA, {"items": clean_extra(body.get("items"))})
+            return self.send_json(extra_data())
         if path == "/api/config":
             with CONFIG_LOCK:
                 c = cfg(); c["directory"] = os.path.expanduser((body.get("directory") or "").strip() or DEFAULT_DIR); save(CONFIG, c)
@@ -117,6 +152,9 @@ class H(SimpleHTTPRequestHandler):
                 if "bank_enabled" in body: c["bank_enabled"] = bool(body["bank_enabled"])
                 if "bank_dir" in body: c["bank_dir"] = str(body["bank_dir"]).strip()
                 if isinstance(body.get("budget"), dict): c["budget"] = body["budget"]
+                if isinstance(body.get("extra_cfg"), dict):
+                    x = body["extra_cfg"]; c["extra_cfg"] = {"metodo": "lordo" if x.get("metodo") == "lordo" else "netto",
+                        "addizionali_pct": min(max(float(x.get("addizionali_pct") or 0), 0), 5), "base_override": max(float(x.get("base_override") or 0), 0)}
                 if isinstance(body.get("bank_map"), dict): c["bank_map"] = {str(k): str(v) for k, v in body["bank_map"].items()}
                 save(CONFIG, c)
             return self.send_json(settings())

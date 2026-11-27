@@ -11,3 +11,6 @@ __pycache__/
 *.xlsx
 cache_bank.json
 home_banking/
+extra.json
+*.zip
+cache*.json

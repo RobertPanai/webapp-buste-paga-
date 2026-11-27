@@ -1,64 +1,87 @@
 <!doctype html>
 <html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PAYSLIP//CORE</title>
+<title>Buste paga</title>
 <style>
-:root{--bg:#04060d;--p:#0b1222;--line:rgba(80,140,255,.18);--tx:#dbe6ff;--mu:#7e8fb5;--c:#22e4ff;--m:#ff2bd6;--v:#8b5cf6;--g:#a3ff12;--a:#ffb020;--r:#ff4d6d}
+:root{--bg:#f4f6f9;--card:#fff;--line:#dfe4ec;--tx:#1b2433;--mu:#64708a;--c:#2563eb;--m:#9b4d8a;--v:#5b63c9;--g:#2b9467;--a:#b9770e;--r:#c9453f;--hov:#eef2f8;--sh:0 1px 2px rgba(16,24,40,.06)}
+@media(prefers-color-scheme:dark){:root{--bg:#10151e;--card:#171e2a;--line:#2a3447;--tx:#e6ebf4;--mu:#93a0b8;--c:#5b8def;--m:#c07ab0;--v:#8089e0;--g:#4cc08c;--a:#e0a040;--r:#e5736d;--hov:#1e2735;--sh:none}}
 *{box-sizing:border-box}html,body{margin:0}
-body{background:radial-gradient(900px 500px at 85% -10%,rgba(139,92,246,.22),transparent),radial-gradient(700px 500px at -5% 10%,rgba(34,228,255,.15),transparent),var(--bg);color:var(--tx);
-font:15px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
-body:before{content:"";position:fixed;inset:0;background:linear-gradient(var(--line) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/48px 48px;opacity:.22;pointer-events:none;mask-image:linear-gradient(#000,transparent 80%)}
-.mono,.num{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-header{position:sticky;top:0;z-index:5;display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:14px 28px;background:rgba(4,6,13,.8);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-.logo{font-weight:800;letter-spacing:.28em;font-size:15px;background:linear-gradient(90deg,var(--c),var(--m));-webkit-background-clip:text;color:transparent}
-.logo i{font-style:normal;color:var(--c);-webkit-text-fill-color:var(--c);text-shadow:0 0 12px var(--c)}
+body{background:var(--bg);color:var(--tx);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;min-height:100vh}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}.num{font-variant-numeric:tabular-nums}
+header{position:sticky;top:0;z-index:5;display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:12px 28px;background:var(--card);border-bottom:1px solid var(--line)}
+.logo{font-weight:650;font-size:16px;letter-spacing:-.01em;padding-right:16px;border-right:1px solid var(--line)}
 .dir{color:var(--mu);font-size:12px;flex:1;min-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pill{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--mu)}.dot{width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 10px var(--g);animation:pl 2s infinite}
-@keyframes pl{50%{opacity:.35}}
-button,select,input{font:inherit;color:var(--tx);background:rgba(20,32,60,.7);border:1px solid var(--line);border-radius:10px;padding:8px 14px}
-button{cursor:pointer;transition:.2s}button:hover{border-color:var(--c);box-shadow:0 0 14px rgba(34,228,255,.35)}
-nav{display:flex;gap:6px;padding:14px 28px 0;flex-wrap:wrap}
-nav button{border-radius:999px;letter-spacing:.08em;font-size:12px;text-transform:uppercase;color:var(--mu)}
-nav button.on{color:#04101a;background:linear-gradient(90deg,var(--c),#7aa8ff);border-color:transparent;box-shadow:0 0 18px rgba(34,228,255,.5)}
-main{padding:20px 28px 60px;max-width:1500px;margin:auto}
+.pill{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--mu)}.dot{width:7px;height:7px;border-radius:50%;background:var(--g)}
+button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 12px}
+input[type=checkbox]{width:auto}
+button{cursor:pointer}button:hover{background:var(--hov)}button.primary,#bOk,#bsave{background:var(--c);border-color:var(--c);color:#fff}button.primary:hover,#bOk:hover,#bsave:hover{filter:brightness(1.08)}
+:focus-visible{outline:2px solid var(--c);outline-offset:1px}
+nav{display:flex;gap:2px;padding:0 28px;flex-wrap:wrap;background:var(--card);border-bottom:1px solid var(--line)}
+nav button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--mu);padding:12px 14px;font-weight:500}
+nav button:hover{color:var(--tx);background:none}nav button.on{color:var(--c);border-bottom-color:var(--c)}
+main{padding:22px 28px 60px;max-width:1500px;margin:auto}
 .grid{display:grid;gap:16px}.k{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(460px,1fr))}
-.card{background:linear-gradient(160deg,rgba(18,28,54,.85),rgba(8,13,28,.85));border:1px solid var(--line);border-radius:16px;padding:18px;position:relative;overflow:hidden}
-.card:before{content:"";position:absolute;left:0;top:0;height:2px;width:100%;background:linear-gradient(90deg,var(--ac,var(--c)),transparent)}
-.card h3{margin:0 0 12px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mu);font-weight:600}
-.kv{font-size:30px;font-weight:700;letter-spacing:-.02em;text-shadow:0 0 22px color-mix(in srgb,var(--ac,var(--c)) 55%,transparent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px;box-shadow:var(--sh);border-top:3px solid var(--ac,var(--c))}
+.card h3{margin:0 0 12px;font-size:13px;color:var(--mu);font-weight:600}
+.kv{font-size:24px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
 .sub{font-size:12px;color:var(--mu);margin-top:4px}.up{color:var(--g)}.dn{color:var(--r)}
 .cv{height:300px;position:relative}.cv.t{height:360px}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
-th{color:var(--mu);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase}th:first-child,td:first-child,td.l,th.l{text-align:left}table.d td:nth-child(-n+3),table.d th:nth-child(-n+3){text-align:left}
-.sc{overflow:auto}tr.tot td{color:var(--c);font-weight:700}
-.tag{font-size:10px;padding:2px 8px;border-radius:99px;border:1px solid currentColor;letter-spacing:.08em;text-transform:uppercase}
-.ok{color:var(--g)}.ko{color:var(--r)}.note{color:var(--mu);font-size:12px;margin:10px 2px}
-.empty{text-align:center;padding:80px 20px;color:var(--mu)}.empty b{color:var(--c)}
-dialog{background:#0b1222;color:var(--tx);border:1px solid var(--c);border-radius:16px;box-shadow:0 0 40px rgba(34,228,255,.25);width:min(560px,92vw)}dialog::backdrop{background:rgba(0,0,0,.6)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{color:var(--mu);font-weight:600;font-size:12px}th:first-child,td:first-child,td.l,th.l{text-align:left}table.d td:nth-child(-n+3),table.d th:nth-child(-n+3){text-align:left}
+.sc{overflow:auto}tr.tot td{font-weight:600;background:var(--hov)}tbody tr:hover td{background:var(--hov)}
+.tag{font-size:11px;padding:1px 7px;border-radius:4px;border:1px solid var(--line);color:var(--mu)}
+.ok{color:var(--g)}.ko{color:var(--r)}.note{color:var(--mu);font-size:12px;margin:10px 2px}.warn{color:var(--a)}
+.empty{text-align:center;padding:80px 20px;color:var(--mu)}.empty b{color:var(--tx)}
+dialog{background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:10px;width:min(560px,92vw)}dialog::backdrop{background:rgba(15,23,42,.45)}
 dialog input{width:100%;margin:10px 0 16px}
+/* Tema futuristico (alternativo, scelto dall'utente) */
+html[data-theme=futuristico]{--bg:#04060d;--card:#0b1222;--line:rgba(80,140,255,.18);--tx:#dbe6ff;--mu:#7e8fb5;--c:#22e4ff;--m:#ff2bd6;--v:#8b5cf6;--g:#a3ff12;--a:#ffb020;--r:#ff4d6d;--hov:rgba(34,228,255,.08);--sh:none}
+[data-theme=futuristico] body{background:radial-gradient(900px 500px at 85% -10%,rgba(139,92,246,.22),transparent),radial-gradient(700px 500px at -5% 10%,rgba(34,228,255,.15),transparent),var(--bg)}
+[data-theme=futuristico] body:before{content:"";position:fixed;inset:0;background:linear-gradient(var(--line) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/48px 48px;opacity:.22;pointer-events:none;mask-image:linear-gradient(#000,transparent 80%)}
+[data-theme=futuristico] header{background:rgba(4,6,13,.8);backdrop-filter:blur(14px)}
+[data-theme=futuristico] .logo{font-weight:800;letter-spacing:.28em;font-size:15px;text-transform:uppercase;border:0;background:linear-gradient(90deg,var(--c),var(--m));-webkit-background-clip:text;background-clip:text;color:transparent}
+[data-theme=futuristico] button,[data-theme=futuristico] select,[data-theme=futuristico] input{background:rgba(20,32,60,.7);border-radius:10px;padding:8px 14px}
+[data-theme=futuristico] button:hover{background:rgba(20,32,60,.7);border-color:var(--c);box-shadow:0 0 14px rgba(34,228,255,.35)}
+[data-theme=futuristico] button.primary,[data-theme=futuristico] #bOk,[data-theme=futuristico] #bsave{background:linear-gradient(90deg,var(--c),#7aa8ff);color:#04101a;border-color:transparent}
+[data-theme=futuristico] nav{background:none;border:0;gap:6px;padding:14px 28px 0}
+[data-theme=futuristico] nav button{border:1px solid var(--line);border-radius:999px;background:rgba(20,32,60,.7);letter-spacing:.08em;font-size:12px;text-transform:uppercase;padding:8px 14px}
+[data-theme=futuristico] nav button.on{color:#04101a;background:linear-gradient(90deg,var(--c),#7aa8ff);border-color:transparent;box-shadow:0 0 18px rgba(34,228,255,.5)}
+[data-theme=futuristico] .card{background:linear-gradient(160deg,rgba(18,28,54,.85),rgba(8,13,28,.85));border-radius:16px;border-top:1px solid var(--line);position:relative;overflow:hidden}
+[data-theme=futuristico] .card:before{content:"";position:absolute;left:0;top:0;height:2px;width:100%;background:linear-gradient(90deg,var(--ac,var(--c)),transparent)}
+[data-theme=futuristico] .card h3{font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+[data-theme=futuristico] .kv{font-size:30px;font-weight:700;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;text-shadow:0 0 22px color-mix(in srgb,var(--ac,var(--c)) 55%,transparent)}
+[data-theme=futuristico] .num{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+[data-theme=futuristico] th{font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+[data-theme=futuristico] tr.tot td{color:var(--c);background:none}
+[data-theme=futuristico] .dot{box-shadow:0 0 10px var(--g)}
+[data-theme=futuristico] dialog{background:#0b1222;border-color:var(--c);box-shadow:0 0 40px rgba(34,228,255,.25);border-radius:16px}
 </style></head><body>
-<header><div class="logo">PAYSLIP<i>//</i>CORE</div><div class="dir mono" id="dir"></div>
+<header><div class="logo">Buste paga</div><div class="dir mono" id="dir"></div>
 <div class="pill"><span class="dot"></span><span id="st">sync…</span></div>
-<button id="bSet">⚙ Cartella</button><button id="bRe">⟳ Rileggi tutto</button></header>
+<select id="tema" title="Tema grafico" aria-label="Tema grafico"><option value="sobrio">Tema sobrio</option><option value="futuristico">Tema futuristico</option></select><button id="bSet">Cartella</button><button id="bRe">Rileggi tutto</button></header>
 <nav id="nav"></nav><main id="app"></main>
-<dialog id="dlg"><h3 style="margin:0;letter-spacing:.14em">CARTELLA BUSTE PAGA</h3>
+<dialog id="dlg"><h3 style="margin:0;font-size:16px">Cartella buste paga</h3>
 <p class="note">Percorso della cartella con i PDF (anche sottocartelle). Il default è <span class="mono" id="def"></span>.</p>
 <input id="inDir" class="mono"><label style="display:flex;gap:10px;align-items:center;margin:4px 0 8px"><input type="checkbox" id="bkOn" style="width:auto;margin:0"> Analizza anche l'home banking (spese, budget, risparmio)</label><p class="note" style="margin:0">Cartella degli estratti conto (lascia vuoto per <span class="mono">home_banking</span> dentro la cartella buste paga):</p><input id="bkDir" class="mono" placeholder="predefinita"><div style="display:flex;gap:10px;justify-content:flex-end"><button id="bDef">Default</button><button id="bX">Annulla</button><button id="bOk">Salva e scansiona</button></div></dialog>
 <script src="vendor/chart.umd.js"></script>
 <script src="banca.js"></script>
+<script src="extra.js"></script>
 <script>
-const CAT={retribuzione:["Retribuzione","#22e4ff"],indennita:["Indennità (EDR)","#7aa8ff"],straordinari:["Straordinari","#ff2bd6"],viaggio:["Ore viaggio","#c084fc"],rimborsi:["Rimborsi e trasferte","#a3ff12"],conguaglio:["Conguaglio fiscale","#ffb020"],
-inps:["INPS","#ff4d6d"],irpef:["IRPEF","#ff8a3d"],addizionali:["Addizionali","#ffd23d"],imposte_sost:["Imposte sostitutive","#f472b6"],prev_compl:["Prev. complementare","#2dd4bf"],mensa:["Mensa / ticket","#94a3b8"],welfare:["Welfare","#34d399"],premi:["Premi","#60a5fa"],assenze:["Assenze","#64748b"],altro:["Altro","#475569"]};
+const CAT={retribuzione:["Retribuzione","#2563eb"],indennita:["Indennità (EDR)","#5b8def"],straordinari:["Straordinari","#a14d8f"],viaggio:["Ore viaggio","#8a74c9"],rimborsi:["Rimborsi e trasferte","#3aa56f"],conguaglio:["Conguaglio fiscale","#d08a1c"],
+inps:["INPS","#d14b4b"],irpef:["IRPEF","#dd7a2f"],addizionali:["Addizionali","#bfa238"],imposte_sost:["Imposte sostitutive","#c0709f"],prev_compl:["Prev. complementare","#2a9d9a"],mensa:["Mensa / ticket","#94a3b8"],welfare:["Welfare","#52b287"],premi:["Premi","#5f93d9"],assenze:["Assenze","#64748b"],altro:["Altro","#475569"]};
 const MESI=["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
-const TABS=[["pan","Panoramica"],["comp","Componenti"],["tax","Tasse & INPS"],["rim","Rimborsi & Straordinari"],["tfr","Ferie & TFR"],["det","Dettaglio"]];
+const TABS=[["pan","Panoramica"],["comp","Componenti"],["tax","Tasse & INPS"],["rim","Rimborsi & Straordinari"],["tfr","Ferie & TFR"],["alt","Altri redditi"],["det","Dettaglio"]];
 let D=null,tab="pan",sel=null,catSel="tutte",charts={},sig="";
 const $=s=>document.querySelector(s),eur=n=>(n==null||isNaN(n))?"—":n.toLocaleString("it-IT",{style:"currency",currency:"EUR"}),
 n2=n=>(n==null||isNaN(n))?"—":n.toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2}),pc=n=>isFinite(n)?n.toFixed(1).replace(".",",")+"%":"—",
 lab=p=>MESI[+p.mese-1]+" "+String(p.anno).slice(2),S=(a,f)=>a.reduce((s,x)=>s+(f(x)||0),0);
-Chart.defaults.color="#8fa1c9";Chart.defaults.font.family="ui-monospace,Menlo,monospace";Chart.defaults.borderColor="rgba(80,140,255,.12)";
+let THEME="sobrio";try{if(localStorage.getItem("tema")==="futuristico")THEME="futuristico"}catch(e){}document.documentElement.dataset.theme=THEME;
+const NEON={"#2563eb":"#22e4ff","#5b8def":"#7aa8ff","#a14d8f":"#ff2bd6","#8a74c9":"#c084fc","#3aa56f":"#a3ff12","#d08a1c":"#ffb020","#d14b4b":"#ff4d6d","#dd7a2f":"#ff8a3d","#bfa238":"#ffd23d","#c0709f":"#f472b6","#2a9d9a":"#2dd4bf","#6b63d6":"#8b5cf6","#52b287":"#34d399","#5f93d9":"#60a5fa"};
+const neonStr=t=>t.replace(/#[0-9a-fA-F]{6}/g,m=>NEON[m.toLowerCase()]||m);
+const CSSV=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();let CARDBG=CSSV("--card");Chart.defaults.color=CSSV("--mu");Chart.defaults.font.family="-apple-system,BlinkMacSystemFont,Segoe UI,Inter,Helvetica,Arial,sans-serif";Chart.defaults.borderColor=CSSV("--line");
 const sumCat=(p,c,t)=>S(p.voci.filter(v=>v.categoria===c),v=>t==="c"?v.competenza_importo:v.trattenuta);
 const sumCode=(p,code)=>S(p.voci.filter(v=>v.codice===code),v=>v.trattenuta+v.competenza_importo);
 const P=()=>D.payslips;
-function mk(id,type,labels,sets,o={}){const el=document.getElementById(id);if(!el)return;charts[id]?.destroy();
+function mk(id,type,labels,sets,o={}){if(THEME==="futuristico")sets=JSON.parse(neonStr(JSON.stringify(sets)));const el=document.getElementById(id);if(!el)return;charts[id]?.destroy();
  charts[id]=new Chart(el,{type,data:{labels,datasets:sets},options:Object.assign({responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
  plugins:{legend:{labels:{boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${o.unit?n2(c.parsed.y)+o.unit:eur(c.parsed.y??c.parsed)}`}}},
  scales:type==="doughnut"?{}:{x:{stacked:!!o.stack},y:{stacked:!!o.stack,ticks:{callback:v=>o.unit?v+o.unit:v+" €"}}}},o.opt||{})})}
@@ -80,9 +103,9 @@ function views(){
   ${kpi("Prelievo medio",pc(tr/lord*100),"trattenute / competenze","var(--a)")}</div>
   <div class="grid g2" style="margin-top:16px">${cv("c1","Lordo · Trattenute · Netto",1)}${cv("c2","Dove vanno le competenze · ultimo mese",1)}</div>
   <p class="note">Le voci sono attribuite al mese della busta paga in cui vengono pagate (straordinari e rimborsi arrivano di solito col mese successivo).</p>`};
- out.pan.after=()=>{mk("c1","bar",L,[ds("Lordo",p.map(x=>T(x).tot_competenze),"#22e4ff"),ds("Trattenute",p.map(x=>T(x).tot_trattenute),"#ff4d6d"),ds("Netto",p.map(x=>T(x).netto),"#a3ff12",{type:"line",backgroundColor:"#a3ff1233",fill:true})]);
-  const parts=[["Netto",T(last).netto,"#a3ff12"],["IRPEF + addizionali",sumCat(last,"irpef","t")+sumCat(last,"addizionali","t"),"#ff8a3d"],["INPS",sumCat(last,"inps","t"),"#ff4d6d"],["Prev. complementare",sumCat(last,"prev_compl","t"),"#2dd4bf"],["Altre trattenute",sumCat(last,"mensa","t")+sumCat(last,"imposte_sost","t")+sumCat(last,"altro","t")+sumCat(last,"conguaglio","t"),"#94a3b8"]].filter(x=>x[1]>0);
-  mk("c2","doughnut",parts.map(x=>x[0]),[{data:parts.map(x=>x[1]),backgroundColor:parts.map(x=>x[2]+"cc"),borderColor:"#04060d",borderWidth:3}],{opt:{cutout:"62%",plugins:{tooltip:{callbacks:{label:c=>` ${c.label}: ${eur(c.parsed)}`}}}}})};
+ out.pan.after=()=>{mk("c1","bar",L,[ds("Lordo",p.map(x=>T(x).tot_competenze),"#2563eb"),ds("Trattenute",p.map(x=>T(x).tot_trattenute),"#d14b4b"),ds("Netto",p.map(x=>T(x).netto),"#3aa56f",{type:"line",backgroundColor:"#3aa56f33",fill:true})]);
+  const parts=[["Netto",T(last).netto,"#3aa56f"],["IRPEF + addizionali",sumCat(last,"irpef","t")+sumCat(last,"addizionali","t"),"#dd7a2f"],["INPS",sumCat(last,"inps","t"),"#d14b4b"],["Prev. complementare",sumCat(last,"prev_compl","t"),"#2a9d9a"],["Altre trattenute",sumCat(last,"mensa","t")+sumCat(last,"imposte_sost","t")+sumCat(last,"altro","t")+sumCat(last,"conguaglio","t"),"#94a3b8"]].filter(x=>x[1]>0);
+  mk("c2","doughnut",parts.map(x=>x[0]),[{data:parts.map(x=>x[1]),backgroundColor:parts.map(x=>x[2]+"cc"),borderColor:CARDBG,borderWidth:3}],{opt:{cutout:"62%",plugins:{tooltip:{callbacks:{label:c=>` ${c.label}: ${eur(c.parsed)}`}}}}})};
  out.comp=()=>{const rows={};p.forEach(x=>x.voci.forEach(v=>{if(v.tipo==="info")return;const k=v.categoria+"|"+v.codice;rows[k]=rows[k]||{cat:v.categoria,desc:v.descrizione,t:v.tipo,m:{}};rows[k].m[x.periodo]=(rows[k].m[x.periodo]||0)+v.competenza_importo+v.trattenuta}));
   const list=Object.values(rows).filter(r=>catSel==="tutte"||r.cat===catSel).sort((a,b)=>a.t.localeCompare(b.t)||a.cat.localeCompare(b.cat));
   const used=[...new Set(Object.values(rows).map(r=>r.cat))];
@@ -94,43 +117,43 @@ function views(){
   mk("c1","bar",L,bar("c"),{stack:1});mk("c2","bar",L,bar("t"),{stack:1});$("#fc")?.addEventListener("change",e=>{catSel=e.target.value;render()})};
  out.tax=()=>{const irp=sumCat,tot=f=>S(p,f);const ir=tot(x=>irp(x,"irpef","t")),ad=tot(x=>irp(x,"addizionali","t")),inps=tot(x=>irp(x,"inps","t")),im=tot(x=>x.campi.imponibile_fiscale);
   const pr=last.campi;
-  return `<div class="grid k">${kpi("IRPEF netta (totale)",eur(ir),"media "+eur(ir/p.length)+"/mese","var(--a)")}${kpi("Addizionali",eur(ad),"comunale + regionale","#ffd23d")}${kpi("INPS (IVS + CIGS)",eur(inps),"media "+eur(inps/p.length)+"/mese","var(--r)")}
-  ${kpi("Aliquota effettiva IRPEF",pc((ir+ad)/im*100),"(IRPEF+add.) / imponibile fiscale","var(--m)")}${kpi("Detrazioni "+lab(last),eur(pr.detrazioni),"lavoro dipendente","var(--g)")}</div>
+  return `<div class="grid k">${kpi("IRPEF netta (totale)",eur(ir),"media "+eur(ir/p.length)+"/mese","var(--a)")}${kpi("Addizionali",eur(ad),"comunale + regionale","#bfa238")}${kpi("INPS (IVS + CIGS)",eur(inps),"media "+eur(inps/p.length)+"/mese","var(--r)")}
+  ${kpi("Aliquota effettiva IRPEF",pc((ir+ad)/im*100),"(IRPEF+add.) / imponibile fiscale","var(--m)")}${kpi("Detrazioni "+lab(last),eur(pr.detrazioni),"lavoro dipendente","var(--g)")}${kpi("Ritenute d'acconto "+last.anno,eur(xsum(String(last.anno)).inc.rit),"altri redditi, già versate","var(--a)")}</div>
   <div class="grid g2" style="margin-top:16px">${cv("c1","Imposte e contributi per mese",1)}${cv("c2","Aliquote % per mese",1)}${cv("c3","Imponibili: fiscale vs previdenziale")}${cv("c4","Progressivi annui (da ultima busta)")}</div>`};
- out.tax.after=()=>{mk("c1","bar",L,[ds("IRPEF",p.map(x=>sumCat(x,"irpef","t")),"#ff8a3d"),ds("Addizionali",p.map(x=>sumCat(x,"addizionali","t")),"#ffd23d"),ds("INPS IVS",p.map(x=>sumCode(x,"Q_ST0021")),"#ff4d6d"),ds("INPS CIGS",p.map(x=>sumCode(x,"Q_ST0023")),"#ff2bd6"),ds("Imp. sostitutive",p.map(x=>sumCat(x,"imposte_sost","t")),"#f472b6"),ds("Prev. compl.",p.map(x=>sumCat(x,"prev_compl","t")),"#2dd4bf")],{stack:1});
-  mk("c2","line",L,[ds("IRPEF+add. / imponibile fisc.",p.map(x=>(sumCat(x,"irpef","t")+sumCat(x,"addizionali","t"))/x.campi.imponibile_fiscale*100),"#ff8a3d"),ds("INPS / imponibile prev.",p.map(x=>(sumCat(x,"inps","t"))/x.campi.imponibile_prev*100),"#ff4d6d"),ds("Trattenute / lordo",p.map(x=>x.campi.tot_trattenute/x.campi.tot_competenze*100),"#22e4ff")],{unit:"%"});
-  mk("c3","bar",L,[ds("Imponibile fiscale",p.map(x=>x.campi.imponibile_fiscale),"#22e4ff"),ds("Imponibile previdenziale",p.map(x=>x.campi.imponibile_prev),"#8b5cf6")]);
+ out.tax.after=()=>{mk("c1","bar",L,[ds("IRPEF",p.map(x=>sumCat(x,"irpef","t")),"#dd7a2f"),ds("Addizionali",p.map(x=>sumCat(x,"addizionali","t")),"#bfa238"),ds("INPS IVS",p.map(x=>sumCode(x,"Q_ST0021")),"#d14b4b"),ds("INPS CIGS",p.map(x=>sumCode(x,"Q_ST0023")),"#a14d8f"),ds("Imp. sostitutive",p.map(x=>sumCat(x,"imposte_sost","t")),"#c0709f"),ds("Prev. compl.",p.map(x=>sumCat(x,"prev_compl","t")),"#2a9d9a")],{stack:1});
+  mk("c2","line",L,[ds("IRPEF+add. / imponibile fisc.",p.map(x=>(sumCat(x,"irpef","t")+sumCat(x,"addizionali","t"))/x.campi.imponibile_fiscale*100),"#dd7a2f"),ds("INPS / imponibile prev.",p.map(x=>(sumCat(x,"inps","t"))/x.campi.imponibile_prev*100),"#d14b4b"),ds("Trattenute / lordo",p.map(x=>x.campi.tot_trattenute/x.campi.tot_competenze*100),"#2563eb")],{unit:"%"});
+  mk("c3","bar",L,[ds("Imponibile fiscale",p.map(x=>x.campi.imponibile_fiscale),"#2563eb"),ds("Imponibile previdenziale",p.map(x=>x.campi.imponibile_prev),"#6b63d6")]);
   const l=last.campi,pg=[["Imponibile fisc.",l.prog_imponibile_fisc],["Imposta netta",l.prog_imposta_netta],["Contributi IVS",l.prog_ivs],["CIGS",l.prog_cigs],["Detrazioni",l.prog_detrazioni]].filter(x=>x[1]!=null);
-  mk("c4","bar",pg.map(x=>x[0]),[ds("Progressivo "+lab(last),pg.map(x=>x[1]),"#22e4ff")])};
+  mk("c4","bar",pg.map(x=>x[0]),[ds("Progressivo "+lab(last),pg.map(x=>x[1]),"#2563eb")])};
  out.rim=()=>{const by=c=>p.map(x=>sumCat(x,c,"c")),R=S(by("rimborsi"),v=>v),ST=S(by("straordinari"),v=>v),VG=S(by("viaggio"),v=>v),oreST=S(p,x=>S(x.voci.filter(v=>v.categoria==="straordinari"),v=>v.quantita)),W=S(p,x=>S(x.voci.filter(v=>v.codice==="V_004199"),v=>v.dato_base));
   const rows=[];p.forEach(x=>x.voci.filter(v=>v.categoria==="rimborsi"&&v.tipo==="competenza"||v.categoria==="straordinari"||v.categoria==="viaggio").forEach(v=>rows.push([lab(x),v.descrizione,v.competenza||"",v.quantita!=null?n2(v.quantita):"",n2(v.competenza_importo)])));
-  return `<div class="grid k">${kpi("Rimborsi e trasferte",eur(R),"totale periodo","var(--g)")}${kpi("Straordinari",eur(ST),n2(oreST)+" ore","var(--m)")}${kpi("Ore viaggio",eur(VG),"indennità di trasferta","#c084fc")}${kpi("Welfare / ticket",eur(W),"quota non tassata (art. 100)","#34d399")}</div>
+  return `<div class="grid k">${kpi("Rimborsi e trasferte",eur(R),"totale periodo","var(--g)")}${kpi("Straordinari",eur(ST),n2(oreST)+" ore","var(--m)")}${kpi("Ore viaggio",eur(VG),"indennità di trasferta","#8a74c9")}${kpi("Welfare / ticket",eur(W),"quota non tassata (art. 100)","#52b287")}</div>
   <div class="grid g2" style="margin-top:16px">${cv("c1","Rimborsi per mese",1)}${cv("c2","Straordinari e viaggio (€ e ore)",1)}</div>
   <div class="card" style="margin-top:16px"><h3>Dettaglio voci</h3><div class="sc">${rows.length?`<table><tr><th class="l">Busta</th><th class="l">Voce</th><th>Competenza</th><th>Qtà</th><th>Importo</th></tr>${rows.map(r=>trow(r)).join("")}</table>`:'<div class="note">Nessuna voce.</div>'}</div></div>`};
- out.rim.after=()=>{mk("c1","bar",L,[ds("Rimborsi",p.map(x=>sumCat(x,"rimborsi","c")),"#a3ff12"),ds("Welfare",p.map(x=>S(x.voci.filter(v=>v.codice==="V_004199"),v=>v.dato_base)),"#34d399")]);
-  mk("c2","bar",L,[ds("Straordinari €",p.map(x=>sumCat(x,"straordinari","c")),"#ff2bd6"),ds("Ore viaggio €",p.map(x=>sumCat(x,"viaggio","c")),"#c084fc"),ds("Ore straordinario",p.map(x=>S(x.voci.filter(v=>v.categoria==="straordinari"),v=>v.quantita)),"#ffb020",{type:"line",yAxisID:"y1"})],{opt:{scales:{y:{ticks:{callback:v=>v+" €"}},y1:{position:"right",grid:{display:false},ticks:{callback:v=>v+" h"}}}}})};
- out.tfr=()=>{const l=last.campi;return `<div class="grid k">${kpi("Ferie residue",n2(l.ferie_residuo)+" gg","a "+lab(last),"var(--c)")}${kpi("Ex festività residue",n2(l.exfest_residuo)+" gg","","var(--v)")}${kpi("TFR maturato "+last.anno,eur(l.prog_tfr),"quota mensile "+eur(l.quota_tfr),"var(--g)")}${kpi("Fondo pensione (anno)",eur((l.prog_fpc_dip||0)+(l.prog_fpc_az||0)),"dip. "+eur(l.prog_fpc_dip)+" · az. "+eur(l.prog_fpc_az),"#2dd4bf")}</div>
+ out.rim.after=()=>{mk("c1","bar",L,[ds("Rimborsi",p.map(x=>sumCat(x,"rimborsi","c")),"#3aa56f"),ds("Welfare",p.map(x=>S(x.voci.filter(v=>v.codice==="V_004199"),v=>v.dato_base)),"#52b287")]);
+  mk("c2","bar",L,[ds("Straordinari €",p.map(x=>sumCat(x,"straordinari","c")),"#a14d8f"),ds("Ore viaggio €",p.map(x=>sumCat(x,"viaggio","c")),"#8a74c9"),ds("Ore straordinario",p.map(x=>S(x.voci.filter(v=>v.categoria==="straordinari"),v=>v.quantita)),"#d08a1c",{type:"line",yAxisID:"y1"})],{opt:{scales:{y:{ticks:{callback:v=>v+" €"}},y1:{position:"right",grid:{display:false},ticks:{callback:v=>v+" h"}}}}})};
+ out.tfr=()=>{const l=last.campi;return `<div class="grid k">${kpi("Ferie residue",n2(l.ferie_residuo)+" gg","a "+lab(last),"var(--c)")}${kpi("Ex festività residue",n2(l.exfest_residuo)+" gg","","var(--v)")}${kpi("TFR maturato "+last.anno,eur(l.prog_tfr),"quota mensile "+eur(l.quota_tfr),"var(--g)")}${kpi("Fondo pensione (anno)",eur((l.prog_fpc_dip||0)+(l.prog_fpc_az||0)),"dip. "+eur(l.prog_fpc_dip)+" · az. "+eur(l.prog_fpc_az),"#2a9d9a")}</div>
   <div class="grid g2" style="margin-top:16px">${cv("c1","Ferie e ex festività residue",1)}${cv("c2","TFR e previdenza complementare",1)}</div>`};
- out.tfr.after=()=>{mk("c1","line",L,[ds("Ferie residue",p.map(x=>x.campi.ferie_residuo),"#22e4ff"),ds("Ex festività",p.map(x=>x.campi.exfest_residuo),"#8b5cf6")],{unit:" gg"});
-  mk("c2","bar",L,[ds("Quota TFR mensile",p.map(x=>x.campi.quota_tfr),"#a3ff12"),ds("Contr. dipendente FPC",p.map(x=>x.campi.ctr_fpc_dip||0),"#2dd4bf"),ds("Contr. azienda FPC",p.map(x=>x.campi.ctr_fpc_az||0),"#7aa8ff"),ds("TFR progressivo",p.map(x=>x.campi.prog_tfr),"#ffb020",{type:"line",yAxisID:"y1"})],{opt:{scales:{y:{ticks:{callback:v=>v+" €"}},y1:{position:"right",grid:{display:false},ticks:{callback:v=>v+" €"}}}}})};
+ out.tfr.after=()=>{mk("c1","line",L,[ds("Ferie residue",p.map(x=>x.campi.ferie_residuo),"#2563eb"),ds("Ex festività",p.map(x=>x.campi.exfest_residuo),"#6b63d6")],{unit:" gg"});
+  mk("c2","bar",L,[ds("Quota TFR mensile",p.map(x=>x.campi.quota_tfr),"#3aa56f"),ds("Contr. dipendente FPC",p.map(x=>x.campi.ctr_fpc_dip||0),"#2a9d9a"),ds("Contr. azienda FPC",p.map(x=>x.campi.ctr_fpc_az||0),"#5b8def"),ds("TFR progressivo",p.map(x=>x.campi.prog_tfr),"#d08a1c",{type:"line",yAxisID:"y1"})],{opt:{scales:{y:{ticks:{callback:v=>v+" €"}},y1:{position:"right",grid:{display:false},ticks:{callback:v=>v+" €"}}}}})};
  out.det=()=>{const x=p.find(q=>q.periodo===sel)||last,c=x.campi,ck=x.controlli;const b=(k,t)=>`<span class="tag ${k?"ok":"ko"}">${t} ${k?"✓":"✗"}</span>`;
-  return `<div class="card"><h3>Busta paga <select id="fs">${p.map(q=>`<option value="${q.periodo}" ${q.periodo===x.periodo?"selected":""}>${lab(q)} — ${q.file}</option>`).join("")}</select> ${b(ck.competenze_ok,"competenze")} ${b(ck.trattenute_ok,"trattenute")} ${b(ck.netto_ok,"netto")}</h3>
+  return `<div class="card"><h3>Busta paga <select id="fs">${p.map(q=>`<option value="${q.periodo}" ${q.periodo===x.periodo?"selected":""}>${lab(q)} — ${esc(q.file)}</option>`).join("")}</select> ${b(ck.competenze_ok,"competenze")} ${b(ck.trattenute_ok,"trattenute")} ${b(ck.netto_ok,"netto")}</h3>
   <div class="grid k" style="margin-bottom:14px">${kpi("Competenze",eur(c.tot_competenze),"","var(--c)")}${kpi("Trattenute",eur(c.tot_trattenute),"","var(--r)")}${kpi("Netto",eur(c.netto),"","var(--g)")}${kpi("Imponibile fiscale",eur(c.imponibile_fiscale),"imposta lorda "+eur(c.imposta_lorda),"var(--a)")}</div>
   <div class="sc"><table class="d"><tr><th class="l">Codice</th><th class="l">Voce</th><th class="l">Componente</th><th>Comp.</th><th>Qtà</th><th>Dato base</th><th>Competenze</th><th>Trattenute</th></tr>
-  ${x.voci.map(v=>trow([v.codice,v.descrizione,`<span style="color:${CAT[v.categoria][1]}">●</span> ${CAT[v.categoria][0]}${v.tipo==="info"?' <span class="tag">info</span>':""}`,v.competenza||"",v.quantita!=null?n2(v.quantita):"",v.dato_base!=null?n2(v.dato_base):"",v.competenza_importo?n2(v.competenza_importo):"",v.trattenuta?n2(v.trattenuta):""])).join("")}</table></div></div>
-  <div class="card" style="margin-top:16px"><h3>Tutte le buste</h3><div class="sc"><table><tr><th class="l">Periodo</th><th>Lordo</th><th>Trattenute</th><th>Netto</th><th>Prelievo</th><th>File</th></tr>${p.map(q=>trow([lab(q),n2(q.campi.tot_competenze),n2(q.campi.tot_trattenute),n2(q.campi.netto),pc(q.campi.tot_trattenute/q.campi.tot_competenze*100),q.file])).join("")}</table></div></div>`};
+  ${x.voci.map(v=>trow([esc(v.codice),esc(v.descrizione),`<span style="color:${CAT[v.categoria][1]}">●</span> ${CAT[v.categoria][0]}${v.tipo==="info"?' <span class="tag">info</span>':""}`,v.competenza||"",v.quantita!=null?n2(v.quantita):"",v.dato_base!=null?n2(v.dato_base):"",v.competenza_importo?n2(v.competenza_importo):"",v.trattenuta?n2(v.trattenuta):""])).join("")}</table></div></div>
+  <div class="card" style="margin-top:16px"><h3>Tutte le buste</h3><div class="sc"><table><tr><th class="l">Periodo</th><th>Lordo</th><th>Trattenute</th><th>Netto</th><th>Prelievo</th><th>File</th></tr>${p.map(q=>trow([lab(q),n2(q.campi.tot_competenze),n2(q.campi.tot_trattenute),n2(q.campi.netto),pc(q.campi.tot_trattenute/q.campi.tot_competenze*100),esc(q.file)])).join("")}</table></div></div>`};
  out.det.after=()=>$("#fs")?.addEventListener("change",e=>{sel=e.target.value;render()});
- return Object.assign(out,bankViews())}
-const BT=new Set(["ban","bud","mov"]);
+ return Object.assign(out,bankViews(),extraViews())}
+const BT=new Set(["ban","bud","mov","alt"]);
 function render(){const a=$("#app"),tabs=TABS.concat(SET.bank_enabled?BANK_TABS:[]);if(!tabs.some(t=>t[0]===tab))tab="pan";const isB=BT.has(tab);
- $("#nav").innerHTML=tabs.map(t=>`<button class="${t[0]===tab?"on":""}" data-t="${t[0]}">${t[1]}</button>`).join("");$("#dir").textContent="📁 "+D.directory+(SET.bank_enabled?"  ·  🏦 banca attiva":"");
+ $("#nav").innerHTML=tabs.map(t=>`<button class="${t[0]===tab?"on":""}" data-t="${t[0]}">${t[1]}</button>`).join("");$("#dir").textContent="Cartella: "+D.directory+(SET.bank_enabled?"  ·  home banking attivo":"");
  Object.values(charts).forEach(c=>c.destroy());charts={};
  if(!isB&&(!D.exists||!P().length)){a.innerHTML=`<div class="empty"><h2>${D.exists?"Nessun PDF trovato":"Cartella non trovata"}</h2><p><b class="mono">${D.directory}</b></p><p>Metti qui le tue buste paga in PDF oppure cambia cartella con ⚙. La pagina si aggiorna da sola.</p></div>`;return}
- const v=views()[tab];a.innerHTML=v();v.after?.();
- if(!isB&&D.errors.length)a.insertAdjacentHTML("beforeend",`<p class="note ko">File non leggibili: ${D.errors.map(e=>e.file+" ("+e.errore+")").join(", ")}</p>`)}
-async function load(force){const [r,s]=await Promise.all([fetch(force?"/api/rescan":"/api/data",{method:force?"POST":"GET"}),fetch("/api/settings")]);const d=await r.json();SET=await s.json();
+ const v=views()[tab];a.innerHTML=THEME==="futuristico"?neonStr(v()):v();v.after?.();
+ if(!isB&&D.errors.length)a.insertAdjacentHTML("beforeend",`<p class="note ko">File non leggibili: ${D.errors.map(e=>esc(e.file)+" ("+esc(e.errore)+")").join(", ")}</p>`)}
+async function load(force){const [r,s,x]=await Promise.all([fetch(force?"/api/rescan":"/api/data",{method:force?"POST":"GET"}),fetch("/api/settings"),fetch("/api/extra")]);const d=await r.json();SET=await s.json();EX=await x.json();
  B=SET.bank_enabled?await (await fetch("/api/bank")).json():null;
- const sg=d.directory+"|"+d.payslips.map(x=>x.file+x.periodo).join(",")+"|"+d.errors.length+"|"+(B?B.sig:"")+"|"+JSON.stringify([SET.bank_enabled,SET.budget,SET.bank_map]);
+ const sg=d.directory+"|"+d.payslips.map(x=>x.file+x.periodo).join(",")+"|"+d.errors.length+"|"+(B?B.sig:"")+"|"+JSON.stringify([SET.bank_enabled,SET.budget,SET.bank_map,SET.extra_cfg,EX]);
  $("#st").textContent=`${d.payslips.length} buste${B?" · "+B.movimenti.length+" mov.":""} · agg. ${new Date().toLocaleTimeString("it-IT")}`;if(sg!==sig||force){sig=sg;D=d;sel=sel&&d.payslips.some(x=>x.periodo===sel)?sel:null;render()}}
 $("#nav").onclick=e=>{const t=e.target.closest("button")?.dataset.t;if(t){tab=t;render()}};
 $("#bRe").onclick=()=>load(true);
@@ -138,5 +161,8 @@ $("#bSet").onclick=async()=>{const c=await (await fetch("/api/settings")).json()
 $("#bX").onclick=()=>$("#dlg").close();$("#bDef").onclick=()=>$("#inDir").value=$("#def").textContent;
 $("#bOk").onclick=async()=>{$("#dlg").close();await fetch("/api/config",{method:"POST",body:JSON.stringify({directory:$("#inDir").value})});
  await fetch("/api/settings",{method:"POST",body:JSON.stringify({bank_enabled:$("#bkOn").checked,bank_dir:$("#bkDir").value})});sig="";await load()};
+function applyTheme(t){THEME=t==="futuristico"?"futuristico":"sobrio";try{localStorage.setItem("tema",THEME)}catch(e){}document.documentElement.dataset.theme=THEME;
+ CARDBG=CSSV("--card");Chart.defaults.color=CSSV("--mu");Chart.defaults.borderColor=CSSV("--line");if(D)render()}
+$("#tema").value=THEME;$("#tema").onchange=e=>applyTheme(e.target.value);
 load();setInterval(()=>load(),10000);
 </script></body></html>

@@ -28,3 +28,8 @@ PAYSLIP//CORE: dashboard locale in Python + HTML/JS per analizzare le buste paga
 - `bank.py` legge file `.xls`/`.xlsx` solo quando `bank_enabled` è attivo. Descrizioni e dettagli dei movimenti restano esclusivamente in memoria durante la sessione e non vanno scritti in cache, log o repository.
 - Non salvare né mostrare numeri carta o IBAN. Non committare estratti conto, cache bancaria, configurazioni locali o nomi personali.
 - Prove esclusivamente con fixture sintetiche; controllare `git status` prima di consegnare.
+
+## Altri redditi
+- `static/extra.js` + API `/api/extra`: compensi fuori busta paga salvati in `extra.json` (mai in repo). Formule fiscali in testa a `extra.js`: aggiornale ogni anno.
+- Il server accetta solo richieste con Host/Origin locali (`allowed()`): non rimuovere il controllo.
+- Due temi scelti dall'utente (`data-theme` su `<html>`, selettore in header): «sobrio» (predefinito, chiaro/scuro automatico) e «futuristico». Il sobrio usa variabili CSS e palette desaturata; i colori neon del futuristico sono la mappa `NEON` in `index.html`. Nuovi colori: aggiungili alla palette sobria e alla mappa `NEON`.
