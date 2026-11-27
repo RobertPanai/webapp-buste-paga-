@@ -11,7 +11,7 @@ function xsum(year){const c=xcfg(),its=EX.items.filter(i=>i.data.startsWith(year
  const r=a=>{const s=a.reduce((t,i)=>{const k=xcalc(i,c);t.net+=k.netto;t.lordo+=k.lordo;t.rit+=k.rit;return t},{net:0,lordo:0,rit:0});
   s.imp=s.lordo?irpefNetta(base+s.lordo)-irpefNetta(base)+s.lordo*c.addizionali_pct/100:0;s.saldo=s.imp-s.rit;s.marg=s.lordo?s.imp/s.lordo*100:0;return s};
  return{base,c,its,inc:r(its.filter(i=>i.incassato)),tot:r(its),da:r(its.filter(i=>!i.incassato))}}
-const xsave=async items=>{await fetch("/api/extra",{method:"POST",body:JSON.stringify({items})});sig="";load()};
+let xsaveBusy=false;const xsave=async items=>{if(xsaveBusy)return;xsaveBusy=true;const controls=()=>document.querySelectorAll("#xadd,#xsav,tr[data-id] input,tr[data-id] button");controls().forEach(el=>el.disabled=true);try{const r=await fetch("/api/extra",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items})});if(!r.ok)throw new Error(`Salvataggio non riuscito (${r.status})`);EX=await r.json();sig="";await load()}catch(e){alert(e.message||"Errore durante il salvataggio dei redditi.")}finally{xsaveBusy=false;controls().forEach(el=>el.disabled=false)}};
 const bracketSplit=(base,x)=>[[0,28000,"23%"],[28000,50000,"33%"],[50000,1e12,"43%"]].map(([a,b,l])=>[l,Math.max(0,Math.min(base,b)-a),Math.max(0,Math.min(base+x,b)-Math.max(a,base))]);
 function extraViews(){const o={};
  o.alt=()=>{const ys=[...new Set([String(new Date().getFullYear()),...EX.items.map(i=>i.data.slice(0,4))])].sort().reverse();if(!eyear||!ys.includes(eyear))eyear=ys[0];

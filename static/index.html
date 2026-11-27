@@ -70,7 +70,7 @@ const CAT={retribuzione:["Retribuzione","#2563eb"],indennita:["Indennità (EDR)"
 inps:["INPS","#d14b4b"],irpef:["IRPEF","#dd7a2f"],addizionali:["Addizionali","#bfa238"],imposte_sost:["Imposte sostitutive","#c0709f"],prev_compl:["Prev. complementare","#2a9d9a"],mensa:["Mensa / ticket","#94a3b8"],welfare:["Welfare","#52b287"],premi:["Premi","#5f93d9"],assenze:["Assenze","#64748b"],altro:["Altro","#475569"]};
 const MESI=["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
 const TABS=[["pan","Panoramica"],["comp","Componenti"],["tax","Tasse & INPS"],["rim","Rimborsi & Straordinari"],["tfr","Ferie & TFR"],["alt","Altri redditi"],["det","Dettaglio"]];
-let D=null,tab="pan",sel=null,catSel="tutte",charts={},sig="";
+let D=null,tab="pan",sel=null,catSel="tutte",charts={},sig="",annualYear=null;
 const $=s=>document.querySelector(s),eur=n=>(n==null||isNaN(n))?"—":n.toLocaleString("it-IT",{style:"currency",currency:"EUR"}),
 n2=n=>(n==null||isNaN(n))?"—":n.toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2}),pc=n=>isFinite(n)?n.toFixed(1).replace(".",",")+"%":"—",
 lab=p=>MESI[+p.mese-1]+" "+String(p.anno).slice(2),S=(a,f)=>a.reduce((s,x)=>s+(f(x)||0),0);
@@ -95,15 +95,23 @@ function trow(cells,cls){return `<tr class="${cls||""}">${cells.map((c,i)=>`<td 
 function views(){
  const p=P(),L=p.map(lab),last=p[p.length-1],prev=p[p.length-2],T=x=>x.campi;
  const out={};
- out.pan=()=>{const tot=S(p,x=>T(x).netto),lord=S(p,x=>T(x).tot_competenze),tr=S(p,x=>T(x).tot_trattenute);
+ out.pan=()=>{const years=[...new Set([...Object.keys(D.annual_totals||{}),...P().map(x=>String(x.anno)),...EX.items.map(i=>String(i.data).slice(0,4)).filter(y=>/^\d{4}$/.test(y))])].sort().reverse();if(!annualYear||!years.includes(annualYear))annualYear=years[0]||String(new Date().getFullYear());
+  const annual=D.annual_totals?.[annualYear],legacy=!("annual_totals" in D),ps=legacy?p.filter(x=>String(x.anno)===annualYear&&Number.isFinite(x.campi?.netto)):[],annualNet=annual?annual.netto:S(ps,x=>x.campi.netto),months=annual?annual.mesi:(legacy?[...new Set(ps.map(x=>+x.mese))]:[]);
+  const extraNet=S(EX.items.filter(i=>String(i.data).slice(0,4)===annualYear&&i.incassato),i=>xcalc(i,xcfg()).netto),payCount=annual?annual.buste:ps.length,hasPayslips=payCount>0,salaryAvg=hasPayslips?annualNet/payCount:null,extraAvg=hasPayslips?extraNet/payCount:null,combinedAvg=hasPayslips?(annualNet+extraNet)/payCount:null;
+  const yearly=`<div class="card" style="margin-top:16px"><h3>Reddito netto medio per cedolino · <select id="fy" aria-label="Anno statistiche">${years.length?years.map(y=>`<option value="${y}" ${y===annualYear?"selected":""}>${y}</option>`):`<option value="${annualYear}">${annualYear}</option>`}</select></h3>
+   <div class="grid k">${kpi("Netto medio per cedolino",hasPayslips?eur(salaryAvg):"—",`Totale annuo ${eur(annualNet)}${hasPayslips?` ÷ ${payCount} cedolini`:` · ${payCount} cedolini utilizzabili`} · ${months.length}/12 mesi con busta`,"var(--g)")}${kpi("Altri redditi incassati · media per cedolino",hasPayslips?eur(extraAvg):"—",`Totale netto incassato ${eur(extraNet)}${hasPayslips?` ÷ ${payCount} cedolini`:` · media non disponibile (0 cedolini)`}`,"var(--a)")}${kpi("Netto combinato medio per cedolino",hasPayslips?eur(combinedAvg):"—",`${eur(annualNet+extraNet)}${hasPayslips?` ÷ ${payCount} cedolini`:` · media non disponibile (0 cedolini)`}`,"var(--v)")}</div>
+   <p class="note">Importi medi calcolati dividendo i totali annui per il numero di cedolini utilizzabili nell’anno selezionato (${payCount}). La stessa divisione è usata per buste paga, altri redditi incassati e totale combinato. Per le buste si sommano tutti i cedolini dell’anno, inclusi quelli aggiuntivi o dello stesso mese; per gli altri redditi si considerano solo quelli segnati come incassati. Importi netti, senza stima di imposte future.${!hasPayslips?` Totale annuo degli altri redditi incassati: ${eur(extraNet)}; medie non disponibili perché non ci sono cedolini utilizzabili.`:""}</p>
+   ${legacy?'<p class="note warn">Il server non fornisce ancora i totali annui completi: questo dato usa le buste visibili e può omettere cedolini aggiuntivi dello stesso mese. Riavvia il server per aggiornare i totali.</p>':""}</div>`;
+  if(!p.length)return `${yearly}<div class="empty"><b>Nessuna busta paga disponibile.</b><p>Per l’anno selezionato, totale degli altri redditi incassati: ${eur(extraNet)}. Le medie non sono disponibili perché non ci sono cedolini utilizzabili.</p></div>`;
+  const tot=S(p,x=>T(x).netto),lord=S(p,x=>T(x).tot_competenze),tr=S(p,x=>T(x).tot_trattenute);
   return `<div class="grid k">${kpi("Netto "+lab(last),eur(T(last).netto),delta(T(last).netto,prev&&T(prev).netto),"var(--g)")}
   ${kpi("Lordo "+lab(last),eur(T(last).tot_competenze),delta(T(last).tot_competenze,prev&&T(prev).tot_competenze),"var(--c)")}
   ${kpi("Trattenute "+lab(last),eur(T(last).tot_trattenute),pc(T(last).tot_trattenute/T(last).tot_competenze*100)+" del lordo","var(--r)")}
-  ${kpi("Netto medio",eur(tot/p.length),p.length+" buste · totale "+eur(tot),"var(--v)")}
+  ${kpi("Netto medio per cedolino (periodo visibile)",eur(tot/p.length),p.length+" buste · totale "+eur(tot),"var(--v)")}
   ${kpi("Prelievo medio",pc(tr/lord*100),"trattenute / competenze","var(--a)")}</div>
-  <div class="grid g2" style="margin-top:16px">${cv("c1","Lordo · Trattenute · Netto",1)}${cv("c2","Dove vanno le competenze · ultimo mese",1)}</div>
+  ${yearly}<div class="grid g2" style="margin-top:16px">${cv("c1","Lordo · Trattenute · Netto",1)}${cv("c2","Dove vanno le competenze · ultimo mese",1)}</div>
   <p class="note">Le voci sono attribuite al mese della busta paga in cui vengono pagate (straordinari e rimborsi arrivano di solito col mese successivo).</p>`};
- out.pan.after=()=>{mk("c1","bar",L,[ds("Lordo",p.map(x=>T(x).tot_competenze),"#2563eb"),ds("Trattenute",p.map(x=>T(x).tot_trattenute),"#d14b4b"),ds("Netto",p.map(x=>T(x).netto),"#3aa56f",{type:"line",backgroundColor:"#3aa56f33",fill:true})]);
+ out.pan.after=()=>{$("#fy")?.addEventListener("change",e=>{annualYear=e.target.value;render()});if(!p.length)return;mk("c1","bar",L,[ds("Lordo",p.map(x=>T(x).tot_competenze),"#2563eb"),ds("Trattenute",p.map(x=>T(x).tot_trattenute),"#d14b4b"),ds("Netto",p.map(x=>T(x).netto),"#3aa56f",{type:"line",backgroundColor:"#3aa56f33",fill:true})]);
   const parts=[["Netto",T(last).netto,"#3aa56f"],["IRPEF + addizionali",sumCat(last,"irpef","t")+sumCat(last,"addizionali","t"),"#dd7a2f"],["INPS",sumCat(last,"inps","t"),"#d14b4b"],["Prev. complementare",sumCat(last,"prev_compl","t"),"#2a9d9a"],["Altre trattenute",sumCat(last,"mensa","t")+sumCat(last,"imposte_sost","t")+sumCat(last,"altro","t")+sumCat(last,"conguaglio","t"),"#94a3b8"]].filter(x=>x[1]>0);
   mk("c2","doughnut",parts.map(x=>x[0]),[{data:parts.map(x=>x[1]),backgroundColor:parts.map(x=>x[2]+"cc"),borderColor:CARDBG,borderWidth:3}],{opt:{cutout:"62%",plugins:{tooltip:{callbacks:{label:c=>` ${c.label}: ${eur(c.parsed)}`}}}}})};
  out.comp=()=>{const rows={};p.forEach(x=>x.voci.forEach(v=>{if(v.tipo==="info")return;const k=v.categoria+"|"+v.codice;rows[k]=rows[k]||{cat:v.categoria,desc:v.descrizione,t:v.tipo,m:{}};rows[k].m[x.periodo]=(rows[k].m[x.periodo]||0)+v.competenza_importo+v.trattenuta}));
@@ -148,12 +156,12 @@ const BT=new Set(["ban","bud","mov","alt"]);
 function render(){const a=$("#app"),tabs=TABS.concat(SET.bank_enabled?BANK_TABS:[]);if(!tabs.some(t=>t[0]===tab))tab="pan";const isB=BT.has(tab);
  $("#nav").innerHTML=tabs.map(t=>`<button class="${t[0]===tab?"on":""}" data-t="${t[0]}">${t[1]}</button>`).join("");$("#dir").textContent="Cartella: "+D.directory+(SET.bank_enabled?"  ·  home banking attivo":"");
  Object.values(charts).forEach(c=>c.destroy());charts={};
- if(!isB&&(!D.exists||!P().length)){a.innerHTML=`<div class="empty"><h2>${D.exists?"Nessun PDF trovato":"Cartella non trovata"}</h2><p><b class="mono">${D.directory}</b></p><p>Metti qui le tue buste paga in PDF oppure cambia cartella con ⚙. La pagina si aggiorna da sola.</p></div>`;return}
+ if(!isB&&tab!=="pan"&&(!D.exists||!P().length)){a.innerHTML=`<div class="empty"><h2>${D.exists?"Nessun PDF trovato":"Cartella non trovata"}</h2><p><b class="mono">${D.directory}</b></p><p>Metti qui le tue buste paga in PDF oppure cambia cartella con ⚙. La pagina si aggiorna da sola.</p></div>`;return}
  const v=views()[tab];a.innerHTML=THEME==="futuristico"?neonStr(v()):v();v.after?.();
  if(!isB&&D.errors.length)a.insertAdjacentHTML("beforeend",`<p class="note ko">File non leggibili: ${D.errors.map(e=>esc(e.file)+" ("+esc(e.errore)+")").join(", ")}</p>`)}
-async function load(force){const [r,s,x]=await Promise.all([fetch(force?"/api/rescan":"/api/data",{method:force?"POST":"GET"}),fetch("/api/settings"),fetch("/api/extra")]);const d=await r.json();SET=await s.json();EX=await x.json();
- B=SET.bank_enabled?await (await fetch("/api/bank")).json():null;
- const sg=d.directory+"|"+d.payslips.map(x=>x.file+x.periodo).join(",")+"|"+d.errors.length+"|"+(B?B.sig:"")+"|"+JSON.stringify([SET.bank_enabled,SET.budget,SET.bank_map,SET.extra_cfg,EX]);
+let loadSeq=0;async function load(force){const requestSeq=++loadSeq;const [r,s,x]=await Promise.all([fetch(force?"/api/rescan":"/api/data",{method:force?"POST":"GET"}),fetch("/api/settings"),fetch("/api/extra")]);const d=await r.json(),settings=await s.json(),extras=await x.json();
+ const bankData=settings.bank_enabled?await (await fetch("/api/bank")).json():null;if(requestSeq!==loadSeq)return;SET=settings;EX=extras;B=bankData;
+ const sg=d.directory+"|"+d.payslips.map(x=>x.file+x.periodo).join(",")+"|"+JSON.stringify(d.annual_totals||null)+"|"+d.errors.length+"|"+(B?B.sig:"")+"|"+JSON.stringify([SET.bank_enabled,SET.budget,SET.bank_map,SET.extra_cfg,EX]);
  $("#st").textContent=`${d.payslips.length} buste${B?" · "+B.movimenti.length+" mov.":""} · agg. ${new Date().toLocaleTimeString("it-IT")}`;if(sg!==sig||force){sig=sg;D=d;sel=sel&&d.payslips.some(x=>x.periodo===sel)?sel:null;render()}}
 $("#nav").onclick=e=>{const t=e.target.closest("button")?.dataset.t;if(t){tab=t;render()}};
 $("#bRe").onclick=()=>load(true);

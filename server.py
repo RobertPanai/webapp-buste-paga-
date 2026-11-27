@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Server locale: scansiona la cartella dei PDF, parsa solo i nuovi/modificati (cache su disco) e serve la dashboard."""
-import json, os, sys, threading, time, tempfile
+import json, os, sys, threading, time, tempfile, hashlib
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, unquote
 from parser import parse_pdf, PARSER_VERSION
@@ -34,15 +34,24 @@ def scan(force=False):
         d = get_dir(); cache = load(CACHE, {})
         if cache.get("version") != PARSER_VERSION or cache.get("dir") != d or force: cache = {"version": PARSER_VERSION, "dir": d, "files": {}}
         files, errors, changed = cache["files"], [], False
-        if not os.path.isdir(d): return {"directory": d, "exists": False, "payslips": [], "errors": [], "updated": time.time()}
+        if not os.path.isdir(d): return {"directory": d, "exists": False, "payslips": [], "annual_totals": {}, "errors": [], "updated": time.time()}
         presenti = set()
         for root, _, names in os.walk(d):
             for n in names:
                 if not n.lower().endswith(".pdf"): continue
                 p = os.path.join(root, n); st = os.stat(p); sig = [st.st_size, st.st_mtime_ns]; presenti.add(p)
-                if p in files and files[p].get("sig") == sig: continue
+                if p in files and files[p].get("sig") == sig:
+                    if not files[p].get("sha256"):
+                        try:
+                            with open(p, "rb") as pdf: files[p]["sha256"] = hashlib.sha256(pdf.read()).hexdigest()
+                            changed = True
+                        except OSError: pass
+                    continue
                 try: files[p] = {"sig": sig, "data": parse_pdf(p)}; files[p]["data"]["file"] = n
                 except Exception as e: files[p] = {"sig": sig, "error": str(e)}
+                try:
+                    with open(p, "rb") as pdf: files[p]["sha256"] = hashlib.sha256(pdf.read()).hexdigest()
+                except OSError: pass
                 changed = True
         for p in list(files):
             if p not in presenti: del files[p]; changed = True
@@ -50,8 +59,25 @@ def scan(force=False):
         per = {}  # una sola busta per periodo: vince il file modificato per ultimo
         for f in sorted((f for f in files.values() if "data" in f), key=lambda f: f["sig"][1]): per[f["data"]["periodo"]] = f["data"]
         pay = [per[k] for k in sorted(per)]
+        # Annual totals include every distinct parsed PDF, including multiple payslips
+        # in the same month. Exact copies are deduplicated by file content.
+        annual, seen = {}, set()
+        for f in files.values():
+            if "data" not in f: continue
+            digest = f.get("sha256")
+            if digest and digest in seen: continue
+            if digest: seen.add(digest)
+            data = f["data"]
+            net = data.get("campi", {}).get("netto")
+            if not isinstance(net, (int, float)): continue
+            year = str(data["anno"]); month = int(data["mese"])
+            row = annual.setdefault(year, {"netto": 0, "buste": 0, "mesi": []})
+            row["netto"] += net
+            row["buste"] += 1
+            if month not in row["mesi"]: row["mesi"].append(month)
+        for row in annual.values(): row["mesi"].sort()
         errors = [{"file": os.path.basename(p), "errore": f["error"]} for p, f in files.items() if "error" in f]
-        return {"directory": d, "exists": True, "payslips": pay, "errors": errors, "updated": time.time()}
+        return {"directory": d, "exists": True, "payslips": pay, "annual_totals": annual, "errors": errors, "updated": time.time()}
 
 def cfg(): return load(CONFIG, {})
 def bank_dir(): return os.path.expanduser(cfg().get("bank_dir") or os.path.join(get_dir(), "home_banking"))
