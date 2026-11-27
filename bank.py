@@ -75,10 +75,6 @@ def scan_bank(folder, cache_path, force=False):
                     package = "xlrd" if exc.name == "xlrd" else "openpyxl" if exc.name == "openpyxl" else None
                     message = f"Libreria {package} mancante. Installa le dipendenze con pip install -r requirements.txt." if package else "Dipendenza necessaria mancante. Installa le dipendenze con pip install -r requirements.txt."
                     files[p] = {"sig": sig, "error": message}
-                except ModuleNotFoundError as exc:
-                    package = "xlrd" if exc.name == "xlrd" else "openpyxl" if exc.name == "openpyxl" else None
-                    message = f"Libreria {package} mancante. Installa le dipendenze con pip install -r requirements.txt." if package else "Dipendenza necessaria mancante. Installa le dipendenze con pip install -r requirements.txt."
-                    files[p] = {"sig": sig, "error": message}
                 except Exception: files[p] = {"sig": sig, "error": "file non leggibile o formato non riconosciuto"}
                 changed = True
     for p in list(files):
